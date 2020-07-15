@@ -9,16 +9,9 @@
 */
 
 #include<vector>
+#include<unordered_map>
 
-/*
-	Logical Resource
-	just used to construct render graph
-*/
-class LogicalResource
-{
-	size_t  resource;
-};
-
+#include"Utils.h"
 
 /*
 	Physical Resource Description
@@ -27,6 +20,19 @@ class LogicalResource
 struct PhysicalDesc
 {
 	size_t desc;
+};
+
+/*
+	Logical Resource
+	just used to construct render graph
+*/
+class LogicalResource
+{
+public:
+	std::string  name;
+	size_t		 resource;
+	PhysicalDesc physicalDesc;
+
 };
 
 
@@ -38,6 +44,7 @@ struct PhysicalDesc
 */
 class PhysicalResource
 {
+public:
 	size_t resource;
 	PhysicalDesc desc;
 };
@@ -46,9 +53,48 @@ class PhysicalResource
 	Descriptor Resource
 	describe how to use logical resource in render pass.
 	
-	Note: allocated in every frame
+	Note: may allocated in every frame
 */
 class DescriptorResource
 {
 	size_t resource;
+};
+
+struct DescriptorDesc
+{
+	size_t desc;
+};
+
+
+// 
+class GraphResourceMgr
+{
+public:
+	// Singleton 
+	static GraphResourceMgr* GetInstance()
+	{
+		static GraphResourceMgr mgr;
+		return &mgr;
+	}
+
+	// Create Logical Resource
+	LogicalResourceID CreateLogicalResource(const std::string& name, const PhysicalDesc& desc);
+
+	// Create Static Descriptor Resource
+	DescriptorResource CreateStaticDescriptorResource(const std::vector<PhysicalResourceID>& logicalResources,
+		const std::vector<DescriptorDesc>& descs);
+	
+
+protected:
+	// Create Physical Resource
+	PhysicalResourceID CreatePhysicalResource(const PhysicalDesc& desc);
+	std::unordered_map<LogicalResourceID, LogicalResource>		mLogicalResources;
+	std::unordered_map<PhysicalResourceID, PhysicalResource>	mPhysicalResources;
+
+	// Logical <-> Physical
+	std::unordered_map<LogicalResource, PhysicalResourceID>		mLogical2Physical;
+
+
+	
+	
 };
