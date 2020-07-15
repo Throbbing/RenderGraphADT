@@ -1,3 +1,4 @@
+#pragma once
 /*
 ********************************************
 	Render Graph ADT
@@ -6,3 +7,6 @@
 					-- liangshenge
 ********************************************
 */
+using PassID = size_t;
+using LogicalResourceID = size_t;
+using PhysicalResourceID = size_t;

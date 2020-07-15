@@ -16,9 +16,21 @@
     <ClInclude Include="..\include\RenderPass.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\Utils.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\RenderGraph.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\GraphResource.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\RenderPass.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\RenderGraph.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>

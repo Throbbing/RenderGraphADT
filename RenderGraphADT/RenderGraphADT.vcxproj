@@ -139,9 +139,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\include\GraphResource.h" />
+    <ClInclude Include="..\include\RenderGraph.h" />
     <ClInclude Include="..\include\RenderPass.h" />
+    <ClInclude Include="..\include\Utils.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\src\RenderGraph.cpp" />
     <ClCompile Include="..\src\RenderPass.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

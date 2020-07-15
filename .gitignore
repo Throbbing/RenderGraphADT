@@ -1,2 +1,4 @@
 *.db
 .vs/RenderGraphADT/v16/.suo
+*.ipch
+.vs/RenderGraphADT/v15/.suo
