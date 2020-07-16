@@ -1,6 +1,7 @@
+#include<algorithm>
 #include "..\include\GraphCompiler.h"
-
-GraphCompiler::GraphCompiledResult GraphCompiler::Compile(RenderGraph& graph) const
+#include<queue>
+GraphCompiledResult GraphCompiler::Compile(RenderGraph& graph) const
 {
 	GraphCompiledResult compiledResult;
 	const auto& passes = graph.mGraphNodes;
@@ -23,7 +24,7 @@ GraphCompiler::GraphCompiledResult GraphCompiler::Compile(RenderGraph& graph) co
 		for (const auto& reader : p.second.readers)
 		{
 			node.outDegree.push_back(reader);
-			dag.nodes[reader].inDegree.push_back(p.second.writer);
+			dag.nodes[reader].inDegreeSize++;
 		}
 	}
 
@@ -35,17 +36,81 @@ GraphCompiler::GraphCompiledResult GraphCompiler::Compile(RenderGraph& graph) co
 	{
 		orders[compiledResult.sortedPass[i]] = i;
 	}
-		
-	for (const auto& resInfo : compiledResult.logicalResourceCompiledInfos)
+	
+	auto& passInfo = compiledResult.renderPassCompiledInfos;
+	for (auto& resInfo : compiledResult.logicalResourceCompiledInfos)
 	{
+		//TODO: write valid?
+		auto& info = resInfo.second;
+		info.start = orders.size();
+		info.end = 0;
+		if (info.writer != INVALID_ID)
+		{
+			info.start = orders[info.writer];
+			info.end = orders[info.writer];
+		}
+		for (auto& reader : info.readers)
+		{
+			info.start = std::min(info.start, orders[reader]);
+			info.end = std::max(info.end, orders[reader]);
+		}
 
+		passInfo[compiledResult.sortedPass[info.start]].needToConstruct.push_back(resInfo.first);
+		passInfo[compiledResult.sortedPass[info.end]].needToDestroy.push_back(resInfo.first);
+
+	}
+	compiledResult.renderGraph = &graph;
+
+	return compiledResult;
+}
+
+std::vector<PassID> GraphCompiler::TopoSort(GraphCompiledResult::DAG dag) const
+{
+	std::queue<PassID > Q;
+	for (auto& nodePair : dag.nodes)
+	{
+		if (nodePair.second.inDegreeSize == 0)
+		{
+			Q.push(nodePair.first);
+		}
+	}
+	std::vector<PassID> orderedPass;
+	while (!Q.empty())
+	{
+		auto pass = Q.front();
+		Q.pop();
+		orderedPass.push_back(pass);
+
+		for (auto& adj : dag.nodes[pass].outDegree)
+		{
+			auto& adjNode = dag.nodes[adj];
+			adjNode.inDegreeSize--;
+
+			if (adjNode.inDegreeSize == 0)
+				Q.push(adj);
+		}
+		
+	}
+	return orderedPass;
+}
+
+// TODO MACRO
+#define Allocate_DescriptorResource
+#define Allocate_PassResource
+#define Construct_Resource
+#define Destroy_Resource
+
+void GraphExecutor::Execute(const GraphCompiledResult& compiledResult)
+{
+	Allocate_DescriptorResource(compiledResult);
+
+	for (auto& passID : compiledResult.sortedPass)
+	{
+		auto pass = compiledResult.renderGraph->GetPass(passID);
+		Construct_Resource(pass);
+		pass->Execute();
+		Destroy_Resource(pass);
 	}
 
 
-	return GraphCompiledResult();
-}
-
-std::vector<PassID> GraphCompiler::TopoSort(const GraphCompiledResult::DAG& dag) const
-{
-	return std::vector<PassID>();
 }
