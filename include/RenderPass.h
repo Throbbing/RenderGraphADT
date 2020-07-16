@@ -14,118 +14,109 @@
 #include<vector>
 #include<map>
 #include<unordered_map>
+#include<functional>
 
 #include "Utils.h"
+#include "GraphResource.h"
+
+
+class RenderGraph;
 
 
 
-struct GraphNodeStruct
+
+class GraphCompiler;
+class RenderGraphPass
 {
-	GraphNodeStruct(GraphNodeStruct&& rhs) noexcept
-	{
-		inDegree  = std::move(rhs.inDegree);
-		outDegree = std::move(rhs.outDegree);
-	}
-	std::vector<size_t>		inDegree;
-	std::vector<size_t>		outDegree;
-};
-
-class IGraphNode
-{
+	friend RenderGraph;
+	friend GraphCompiler;
 public:
-	virtual int GetInDegree() = 0;
-	virtual int GetOutDegree() = 0;
-	virtual GraphNodeStruct	 ConvertStruct() const = 0;
-};
-
-// Render Pass Interface
-class IRenderGraphPass:public IGraphNode
-{
-public:
-	virtual void Setup() = 0;
-	virtual void Execute() = 0;
-	virtual void BindInput(const std::vector<LogicalResourceID>& InputResources) = 0;
-	virtual void BindOutput(const std::vector<LogicalResourceID>& OutputResources) = 0;
-	virtual const PassID& GetPassID() const
-	{
-		return mPassID;
-	}
-
-protected:
-	PassID			mPassID;
-};
-
-template<bool Asyn ,typename SetupFunc,typename ExecuteFunc>
-class TRenderGraphPass :public IRenderGraphPass
-{
-public:
-	TRenderGraphPass(const PassID& passID) { mPassID = passID; }
-	TRenderGraphPass(const PassID& passID, const SetupFunc& setupFunc, const ExecuteFunc& executeFunc) 
+	RenderGraphPass(const PassID& passID) { mPassID = passID; }
+	RenderGraphPass(const PassID& passID, const std::function<void(const RenderGraphPass*)>& setupFunc, const std::function<void(const RenderGraphPass*)>& executeFunc)
 	{ 
 		mPassID = passID;  
 		mSetupFunc = setupFunc;
 		mExecuteFunc = executeFunc;
 	}
-	TRenderGraphPass(
+	RenderGraphPass(
 		const PassID& passID,
-		const SetupFunc& setupFunc, 
-		const ExecuteFunc& executeFunc,
+		const std::function<void(const RenderGraphPass*)>& setupFunc,
+		const std::function<void(const RenderGraphPass*)>& executeFunc,
 		const std::vector<LogicalResourceID>& InputResources,
 		const std::vector<LogicalResourceID>& OutputResources
-		):TRenderGraphPass(passID,setupFunc,executeFunc)
+		):RenderGraphPass(passID,setupFunc,executeFunc)
 	{
 		BindInput(InputResources);
 		BindOutput(OutputResources);
 	}
 
-	virtual void Setup() override
+	virtual void Setup()
 	{
 		mSetupFunc(this);
 	}
 
-	virtual void Execute() override
+	virtual void Execute()
 	{
 		mExecuteFunc(this);
 	}
 
-	virtual void BindInput(const std::vector<LogicalResourceID>& InputResources) override
+	virtual void BindInput(const std::vector<LogicalResourceID>& InputResources)
 	{
-		// 暂时不能重复绑定
+		// Rebind is forbidden for the moment
 		_ASSERT(mInputResources.empty());
 		mInputResources = InputResources;
 	}
 
-	virtual void BindOutput(const std::vector<LogicalResourceID>& OutputResources) override
+	virtual void BindOutput(const std::vector<LogicalResourceID>& OutputResources) 
 	{
-		// 暂时不能重复绑定
+		// Rebind is forbidden for the moment
 		_ASSERT(mOutputResources.empty());
 		mOutputResources = OutputResources;
 	}
 
-	virtual GraphNodeStruct ConvertStruct() const override
+	virtual void BindLogicalDescriptor(const std::vector<LogicalResourceID>& logicalResources, const DescriptorDesc& desc)
 	{
-		GraphNodeStruct nodeStruct;
-		for (const auto& inputIdx : mInputResources)
+		
+		/*
+			Descritpor Reousrce is a kind of light resource which can be created at each frame
+			So the process of allocation will be delayed until EXECUTE starts
+		*/
+		DescriptorResourceID descriptorID = mDescriptorDescs.size();
+		
+		/*
+			just need to store desc
+		*/
+		mDescriptorDescs.push_back(desc);
+		for (const auto& logicalID : logicalResources)
 		{
-			nodeStruct.inDegree.push_back(inputIdx);
+			mLogical2Descriptor[logicalID] = descriptorID;
 		}
-		for (const auto& outputIdx : mOutputResources)
-		{
-			nodeStruct.outDegree.push_back(outputIdx);
-		}
-		return nodeStruct;
+	
 	}
+	
+
 	
 
 
 protected:
 
-	// 函数执行体 对象
-	SetupFunc	 mSetupFunc;
-	ExecuteFunc  mExecuteFunc;
+	// Callable Object
+	std::function<void(const RenderGraphPass*)>			mSetupFunc;
+	std::function<void(const RenderGraphPass*)>			mExecuteFunc;
 	
-	// 输入资源
+
+
+	// Input Resources
 	std::vector<LogicalResourceID>		mInputResources;
-	// 输出资源
+	// Output Resources
 	std::vector<LogicalResourceID>		mOutputResources;
+	// Logical <-> Descriptor Resource
+	std::unordered_map<LogicalResourceID, DescriptorResourceID> mLogical2Descriptor;
+	// Descriptor Resource
+	std::vector<DescriptorDesc>			mDescriptorDescs;
+
+
+	PassID								mPassID;
+	std::string							mPassName;
+	const RenderGraph*					mRootGraph = nullptr;
 };

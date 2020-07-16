@@ -25,6 +25,9 @@
     <ClInclude Include="..\include\GraphResource.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\GraphCompiler.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\RenderPass.cpp">
@@ -34,6 +37,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\GraphResource.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\GraphCompiler.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>

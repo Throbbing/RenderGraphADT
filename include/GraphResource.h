@@ -13,6 +13,9 @@
 
 #include"Utils.h"
 
+constexpr size_t Logical_Implicit = 0;
+constexpr size_t Logical_Explicit = 1;
+constexpr size_t Logical_Unknown = 2;
 /*
 	Physical Resource Description
 	bound to logical resource for searching a real physical resource
@@ -32,6 +35,12 @@ public:
 	std::string  name;
 	size_t		 resource;
 	PhysicalDesc physicalDesc;
+	
+	// implicit or explicit
+
+	// implicit: Bind a matched physical resource created or searched automaticlly to this logical resource
+	// explicit: Bind a given physical resource to this logical resource
+	size_t		 type;
 
 };
 
@@ -63,6 +72,7 @@ class DescriptorResource
 struct DescriptorDesc
 {
 	size_t desc;
+
 };
 
 
@@ -78,12 +88,15 @@ public:
 	}
 
 	// Create Logical Resource
+	LogicalResourceID CreateLogicalResource(const std::string& name);
 	LogicalResourceID CreateLogicalResource(const std::string& name, const PhysicalDesc& desc);
+	LogicalResourceID CreateLogicalResource(const std::string& name, const PhysicalResourceID& physicalID);
+	void	BindUnknownResource(const LogicalResourceID& logicalID, const PhysicalResourceID& physicalID);
 
-	// Create Static Descriptor Resource
-	DescriptorResource CreateStaticDescriptorResource(const std::vector<PhysicalResourceID>& logicalResources,
-		const std::vector<DescriptorDesc>& descs);
 	
+	// Load existed physical resource
+	PhysicalResourceID LoadPhysicalResource(const PhysicalResource& physical);
+
 
 protected:
 	// Create Physical Resource

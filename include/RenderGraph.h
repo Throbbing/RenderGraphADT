@@ -9,27 +9,43 @@
 */
 #include<variant>
 #include<vector>
-
+#include"Utils.h"
 #include"RenderPass.h"
+
+struct RenderGraphNode
+{
+	PassID id;
+	std::vector<size_t> outDegree;
+	std::vector<size_t> inDegree;
+};
+
+class GraphCompiler;
 class RenderGraph
 {
+	friend class GraphCompiler;
 public:
-	// µ¥ÀýÄ£Ê½
+	// Singleton
 	static	RenderGraph* GetInstance()
 	{
 		static RenderGraph gRenderGraph;
 		return &gRenderGraph;
 	}
 
-	template<typename T,typename... NodeArgs>
+	template<typename... NodeArgs>
 	PassID CreateGraphNode(NodeArgs&&... args)
 	{
 		auto id = mNodeGraphs.size();
-		mNodeGraphs.push_back(new T(std::forward<NodeArgs>(args)));
+		RenderGraphPass* node = new RenderGraphPass(std::forward<NodeArgs>(args);
+		node->mRootGraph = this;
+		mGraphNodes.push_back(node);
 		return static_cast<PassID>(id);
 	}
 
+	
+
+
+
 protected:
-	std::vector<IGraphNode*> mNodeGraphs;
+	std::vector<RenderGraphPass*> mGraphNodes;
 
 };

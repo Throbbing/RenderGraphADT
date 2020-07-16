@@ -139,12 +139,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\include\GraphCompiler.h" />
     <ClInclude Include="..\include\GraphResource.h" />
     <ClInclude Include="..\include\RenderGraph.h" />
     <ClInclude Include="..\include\RenderPass.h" />
     <ClInclude Include="..\include\Utils.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\src\GraphCompiler.cpp" />
     <ClCompile Include="..\src\GraphResource.cpp" />
     <ClCompile Include="..\src\RenderGraph.cpp" />
     <ClCompile Include="..\src\RenderPass.cpp" />

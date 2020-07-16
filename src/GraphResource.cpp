@@ -8,6 +8,18 @@
 ********************************************
 */
 
+LogicalResourceID GraphResourceMgr::CreateLogicalResource(const std::string& name)
+{
+	LogicalResourceID id = mLogicalResources.size();
+	LogicalResource resource;
+	resource.name = name;
+	resource.type = Logical_Unknown;
+
+	mLogicalResources[id] = resource;
+
+	return id;
+}
+
 LogicalResourceID GraphResourceMgr::CreateLogicalResource(const std::string& name, const PhysicalDesc& desc)
 {
 	LogicalResourceID id = mLogicalResources.size();
@@ -15,15 +27,37 @@ LogicalResourceID GraphResourceMgr::CreateLogicalResource(const std::string& nam
 	LogicalResource resource;
 	resource.name         = name;
 	resource.physicalDesc = desc;
-	
+	resource.type = Logical_Implicit;
 	mLogicalResources[id] = resource;
 	return id;
 }
 
-DescriptorResource GraphResourceMgr::CreateStaticDescriptorResource(const std::vector<PhysicalResourceID>& logicalResources, const std::vector<DescriptorDesc>& descs)
+LogicalResourceID GraphResourceMgr::CreateLogicalResource(const std::string& name, const PhysicalResourceID& physicalID)
 {
-	_ASSERT(logicalResources.size() == descs.size());
-	return DescriptorResource();
+	LogicalResourceID id = mLogicalResources.size();
+	LogicalResource resource;
+	resource.name = name;
+	resource.physicalDesc = mPhysicalResources[physicalID].desc;
+	resource.type = Logical_Explicit;
+	return id;
+}
+
+void GraphResourceMgr::BindUnknownResource(const LogicalResourceID& logicalID, const PhysicalResourceID& physicalID)
+{
+	
+	auto& logical = mLogicalResources[logicalID];
+	_ASSERT(logical.type == Logical_Unknown);
+	logical.physicalDesc = mPhysicalResources[physicalID].desc;
+	logical.type = Logical_Implicit;
+
+}
+
+
+PhysicalResourceID GraphResourceMgr::LoadPhysicalResource(const PhysicalResource& physical)
+{
+	PhysicalResourceID id = mPhysicalResources.size();
+	mPhysicalResources[id] = physical;
+	return id;
 }
 
 PhysicalResourceID GraphResourceMgr::CreatePhysicalResource(const PhysicalDesc& desc)
